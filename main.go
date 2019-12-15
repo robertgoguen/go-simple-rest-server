@@ -10,19 +10,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type event struct {
-	ID          string `json:"ID"`
-	Title       string `json:"Title"`
-	Description string `json:"Description"`
+type Key struct {
+	Key   string `json:"Key"`
+	Value string `json:"Value"`
 }
 
-type allEvents []event
+type allKey []Key
 
-var events = allEvents{
+var keys = allKey{
 	{
-		ID:          "1",
-		Title:       "Introduction to Golang",
-		Description: "Come join us for a chance to learn how golang works and get to eventually try it out",
+		Key:   "quincy",
+		Value: "rules",
 	},
 }
 
@@ -30,73 +28,72 @@ func homeLink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Welcome home!")
 }
 
-func createEvent(w http.ResponseWriter, r *http.Request) {
-	var newEvent event
+func createKey(w http.ResponseWriter, r *http.Request) {
+	var newKey Key
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Kindly enter data with the event title and description only in order to update")
+		fmt.Fprintf(w, "Kindly enter value with the key value only in order to update")
 	}
-	
-	json.Unmarshal(reqBody, &newEvent)
-	events = append(events, newEvent)
+
+	json.Unmarshal(reqBody, &newKey)
+	keys = append(keys, newKey)
 	w.WriteHeader(http.StatusCreated)
 
-	json.NewEncoder(w).Encode(newEvent)
+	json.NewEncoder(w).Encode(newKey)
 }
 
-func getOneEvent(w http.ResponseWriter, r *http.Request) {
-	eventID := mux.Vars(r)["id"]
+func getOneKey(w http.ResponseWriter, r *http.Request) {
+	key := mux.Vars(r)["id"]
 
-	for _, singleEvent := range events {
-		if singleEvent.ID == eventID {
-			json.NewEncoder(w).Encode(singleEvent)
+	for _, singleKey := range keys {
+		if singleKey.Key == key {
+			json.NewEncoder(w).Encode(singleKey)
 		}
 	}
 }
 
-func getAllEvents(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(events)
+func getAllKeys(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(keys)
 }
 
-func updateEvent(w http.ResponseWriter, r *http.Request) {
-	eventID := mux.Vars(r)["id"]
-	var updatedEvent event
+func updateKey(w http.ResponseWriter, r *http.Request) {
+	key := mux.Vars(r)["id"]
+	var updatedKey Key
 
 	reqBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		fmt.Fprintf(w, "Kindly enter data with the event title and description only in order to update")
+		fmt.Fprintf(w, "Kindly enter value with the key value only in order to update")
 	}
-	json.Unmarshal(reqBody, &updatedEvent)
+	json.Unmarshal(reqBody, &updatedKey)
 
-	for i, singleEvent := range events {
-		if singleEvent.ID == eventID {
-			singleEvent.Title = updatedEvent.Title
-			singleEvent.Description = updatedEvent.Description
-			events = append(events[:i], singleEvent)
-			json.NewEncoder(w).Encode(singleEvent)
+	for i, singleKey := range keys {
+		if singleKey.Key == key {
+			singleKey.Value = updatedKey.Value
+			keys = append(keys[:i], singleKey)
+			json.NewEncoder(w).Encode(singleKey)
 		}
 	}
 }
 
-func deleteEvent(w http.ResponseWriter, r *http.Request) {
-	eventID := mux.Vars(r)["id"]
+func deleteKey(w http.ResponseWriter, r *http.Request) {
+	key := mux.Vars(r)["id"]
 
-	for i, singleEvent := range events {
-		if singleEvent.ID == eventID {
-			events = append(events[:i], events[i+1:]...)
-			fmt.Fprintf(w, "The event with ID %v has been deleted successfully", eventID)
+	for i, singleKey := range keys {
+		if singleKey.Key == key {
+			keys = append(keys[:i], keys[i+1:]...)
+			fmt.Fprintf(w, "The key with Key %v has been deleted successfully\n", key)
 		}
 	}
 }
 
 func main() {
-	initEvents()
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeLink)
-	router.HandleFunc("/event", createEvent).Methods("POST")
-	router.HandleFunc("/events", getAllEvents).Methods("GET")
-	router.HandleFunc("/events/{id}", getOneEvent).Methods("GET")
-	router.HandleFunc("/events/{id}", updateEvent).Methods("PATCH")
-	router.HandleFunc("/events/{id}", deleteEvent).Methods("DELETE")
+	router.HandleFunc("/key", createKey).Methods("POST")
+	router.HandleFunc("/keys", getAllKeys).Methods("GET")
+	router.HandleFunc("/keys/{id}", getOneKey).Methods("GET")
+	router.HandleFunc("/keys/{id}", updateKey).Methods("PATCH")
+	router.HandleFunc("/keys/{id}", deleteKey).Methods("DELETE")
+	fmt.Printf("ListenAndServe at address :8080\n")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
